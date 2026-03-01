@@ -2,21 +2,6 @@
 //!
 //! This module provides Rust interfaces for OpenWrt's Unified Configuration
 //! Interface (UCI), enabling configuration management through the Tool trait.
-//!
-//! # Architecture
-//!
-//! - [`types`] - Core UCI data structures (UciConfig, UciValue, UciTransaction)
-//! - [`executor`] - UCI command execution wrapper
-//! - [`transaction`] - Transaction management with rollback support
-//! - [`uci_get`] - Tool for reading UCI configuration
-//! - [`uci_set`] - Tool for writing UCI configuration
-//! - [`uci_list`] - Tool for listing UCI configuration
-//! - [`uci_validate`] - Tool for validating UCI configuration
-//!
-//! # Extension
-//!
-//! To add new UCI operations, implement the [`Tool`] trait in a new submodule
-//! and register it in the tools registry.
 
 pub mod executor;
 pub mod transaction;
@@ -25,6 +10,7 @@ pub mod uci_get;
 pub mod uci_list;
 pub mod uci_set;
 pub mod uci_validate;
+pub mod package;
 
 pub use executor::UciExecutor;
 pub use transaction::{TransactionManager, TransactionState};
@@ -35,6 +21,11 @@ pub use uci_get::{UciGetBulkTool, UciGetTool};
 pub use uci_list::{UciChangesTool, UciListTool};
 pub use uci_set::{UciBatchTool, UciSetTool};
 pub use uci_validate::{UciAddTool, UciCommitTool, UciRevertTool, UciValidateTool};
+
+pub use package::{
+    OpkgListTool, OpkgInstallTool, OpkgRemoveTool, OpkgUpdateTool,
+    ServiceManageTool, PackageInfo, PackageStatus, ServiceInfo,
+};
 
 use std::sync::Arc;
 
