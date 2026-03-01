@@ -11,6 +11,7 @@ pub mod uci_list;
 pub mod uci_set;
 pub mod uci_validate;
 pub mod package;
+pub mod docker;
 
 pub use executor::UciExecutor;
 pub use transaction::{TransactionManager, TransactionState};
@@ -25,6 +26,11 @@ pub use uci_validate::{UciAddTool, UciCommitTool, UciRevertTool, UciValidateTool
 pub use package::{
     OpkgListTool, OpkgInstallTool, OpkgRemoveTool, OpkgUpdateTool,
     ServiceManageTool, PackageInfo, PackageStatus, ServiceInfo,
+};
+
+pub use docker::{
+    DockerListTool, DockerManageTool, DockerImageTool, DockerNetworkTool,
+    ContainerInfo, ContainerStatus, ImageInfo, NetworkInfo, VolumeInfo,
 };
 
 use std::sync::Arc;
