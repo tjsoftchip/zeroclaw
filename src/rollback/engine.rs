@@ -483,8 +483,10 @@ impl RollbackEngine {
     }
 
     pub fn get_pending_rollbacks(&self) -> Vec<PendingRollback> {
-        let pending = self.pending_rollbacks.blocking_read();
-        pending.iter().filter(|p| !p.confirmed).cloned().collect()
+        match self.pending_rollbacks.try_read() {
+            Ok(guard) => guard.iter().filter(|p| !p.confirmed).cloned().collect(),
+            Err(_) => Vec::new(),
+        }
     }
 
     fn create_pre_rollback_snapshot(&self) -> Result<ConfigSnapshot> {

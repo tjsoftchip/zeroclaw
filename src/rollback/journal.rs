@@ -995,7 +995,7 @@ mod tests {
     }
 
     #[test]
-    fn compute_diff_for_record() {
+    fn test_compute_diff_for_record() {
         let record = ChangeRecord::new(
             "zeroclaw_user",
             ChangeType::FirewallRule,

@@ -118,11 +118,22 @@ impl Tool for ConfigRollbackTool {
                     limit: Some(1),
                     ..Default::default()
                 }
-            )?;
+            );
 
-            match snapshots.first() {
-                Some(s) => self.engine.rollback_to_snapshot(&s.id).await,
-                None => anyhow::bail!("No snapshot found with label: {}", l),
+            match snapshots {
+                Ok(snapshots) => match snapshots.first() {
+                    Some(s) => self.engine.rollback_to_snapshot(&s.id).await,
+                    None => return Ok(ToolResult {
+                        success: false,
+                        output: String::new(),
+                        error: Some(format!("No snapshot found with label: {}", l)),
+                    }),
+                },
+                Err(e) => return Ok(ToolResult {
+                    success: false,
+                    output: String::new(),
+                    error: Some(format!("Failed to list snapshots: {}", e)),
+                }),
             }
         } else {
             let snapshots = self.engine.snapshot_manager().list_snapshots(
@@ -759,7 +770,7 @@ mod tests {
         let result = tool
             .execute(json!({ "label": "nonexistent" }))
             .await
-            .unwrap();
+            .expect("Tool execution should not panic");
 
         assert!(!result.success);
         assert!(result.error.unwrap().contains("No snapshot found"));

@@ -272,3 +272,21 @@ git fetch collaborator
 # 合并协作者的分支
 git merge collaborator/feature-branch
 ```
+
+### 后续同步上游更新的方法
+# 1. 获取上游更新
+git fetch upstream
+
+# 2. 合并到当前分支
+git merge upstream/main
+
+# 3. 解决冲突后推送
+git push origin feature/openwrt-smart-gateway
+
+### 创建Pull Request
+您可以在GitHub上访问: https://github.com/tjsoftchip/zeroclaw/pull/new/feature/openwrt-smart-gateway
+
+如果您想将此功能合并到您fork的main分支，可以：
+git checkout main
+git merge feature/openwrt-smart-gateway
+git push origin main
