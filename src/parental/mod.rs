@@ -3,6 +3,7 @@ pub mod group;
 pub mod alias;
 pub mod rules;
 pub mod dpi;
+pub mod audit;
 
 pub use device::{DeviceIdentifyTool, DeviceInfo};
 pub use group::{DeviceGroupManageTool, DeviceGroupListTool};
@@ -20,4 +21,11 @@ pub use dpi::{
     ProtocolIdentifyTool, AppDetectTool, ContentCategoryTool,
     Protocol, AppCategory, AppSignature, RiskLevel, TrafficInfo,
     ContentCategory, SignatureDatabase,
+};
+
+pub use audit::{
+    BehaviorLogTool, UsageStatsTool, ParentNotifyTool, BehaviorReportTool,
+    BehaviorLog, BehaviorEventType, UsageStats as UsageStatsType, StatsPeriod,
+    NotificationConfig, Notification as NotificationType, NotificationType as NotifyType, NotificationSeverity,
+    BehaviorReport, DeviceReport, CategoryStats, ViolationRecord, ReportSummary,
 };
