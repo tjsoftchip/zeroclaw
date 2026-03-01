@@ -9,6 +9,7 @@ pub mod firewall_delete;
 pub mod firewall_schedule;
 pub mod firewall_content_filter;
 pub mod firewall_port_forward;
+pub mod security;
 
 pub use interface_list::NetworkInterfaceListTool;
 pub use device_discover::NetworkDeviceDiscoverTool;
@@ -26,4 +27,9 @@ pub use firewall::{
     FirewallRule, FirewallZone, FirewallPolicy, Protocol,
     PortForwardRule, ScheduleRule, ScheduleAction,
     ContentFilterRule, FilterAction,
+};
+
+pub use security::{
+    SecurityLevel, SecurityEvent, SecurityEventType,
+    TrafficStats, BlockedIP, ThreatInfo, AlertConfig,
 };
