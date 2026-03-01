@@ -346,6 +346,7 @@ mod tests {
 
     #[test]
     fn test_firewall_zone_from_str() {
+        use std::str::FromStr;
         assert_eq!(FirewallZone::from_str("lan").unwrap(), FirewallZone::Lan);
         assert_eq!(FirewallZone::from_str("WAN").unwrap(), FirewallZone::Wan);
         assert_eq!(FirewallZone::from_str("custom").unwrap(), FirewallZone::Custom("custom".to_string()));

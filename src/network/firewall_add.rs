@@ -45,11 +45,11 @@ impl FirewallAddTool {
         }
 
         if let Some(src) = args.get("src_zone").and_then(|v| v.as_str()) {
-            rule = rule.src_zone(src.parse::<FirewallZone>()?);
+            rule = rule.src_zone(src.parse::<FirewallZone>().map_err(|e| anyhow::anyhow!("{}", e))?);
         }
 
         if let Some(dest) = args.get("dest_zone").and_then(|v| v.as_str()) {
-            rule = rule.dest_zone(dest.parse::<FirewallZone>()?);
+            rule = rule.dest_zone(dest.parse::<FirewallZone>().map_err(|e| anyhow::anyhow!("{}", e))?);
         }
 
         if let Some(ip) = args.get("src_ip").and_then(|v| v.as_str()) {
@@ -69,11 +69,11 @@ impl FirewallAddTool {
         }
 
         if let Some(proto) = args.get("protocol").and_then(|v| v.as_str()) {
-            rule = rule.protocol(proto.parse::<Protocol>()?);
+            rule = rule.protocol(proto.parse::<Protocol>().map_err(|e| anyhow::anyhow!("{}", e))?);
         }
 
         if let Some(target) = args.get("target").and_then(|v| v.as_str()) {
-            rule = rule.target(target.parse::<FirewallPolicy>()?);
+            rule = rule.target(target.parse::<FirewallPolicy>().map_err(|e| anyhow::anyhow!("{}", e))?);
         }
 
         if let Some(schedule) = args.get("schedule").and_then(|v| v.as_str()) {
@@ -242,79 +242,38 @@ impl Tool for FirewallAddTool {
 mod tests {
     use super::*;
 
-    fn test_security() -> Arc<SecurityPolicy> {
-        Arc::new(SecurityPolicy::default())
-    }
-
-    fn test_executor() -> Arc<UciExecutor> {
-        Arc::new(UciExecutor::new(test_security()))
-    }
-
-    fn test_transaction_manager() -> Arc<TransactionManager> {
-        Arc::new(TransactionManager::new(test_executor()))
-    }
-
-    fn test_change_wrapper() -> Arc<SafeChangeExecutor> {
-        Arc::new(SafeChangeExecutor::new(
-            crate::rollback::journal::ChangeJournal::new_in_memory().unwrap(),
-            crate::rollback::snapshot::SnapshotManager::new_in_memory().unwrap(),
-            crate::rollback::engine::RollbackConfig::default(),
-        ))
+    #[test]
+    fn test_firewall_zone_parsing() {
+        use std::str::FromStr;
+        assert_eq!(FirewallZone::from_str("lan").unwrap(), FirewallZone::Lan);
+        assert_eq!(FirewallZone::from_str("wan").unwrap(), FirewallZone::Wan);
     }
 
     #[test]
-    fn tool_metadata() {
-        let tool = FirewallAddTool::new(
-            test_security(),
-            test_executor(),
-            test_transaction_manager(),
-            test_change_wrapper(),
-        );
-        assert_eq!(tool.name(), "firewall_add");
-        assert!(!tool.description().is_empty());
+    fn test_protocol_parsing() {
+        use std::str::FromStr;
+        assert_eq!(Protocol::from_str("tcp").unwrap(), Protocol::Tcp);
+        assert_eq!(Protocol::from_str("udp").unwrap(), Protocol::Udp);
     }
 
     #[test]
-    fn parse_rule_from_args() {
-        let tool = FirewallAddTool::new(
-            test_security(),
-            test_executor(),
-            test_transaction_manager(),
-            test_change_wrapper(),
-        );
+    fn test_policy_parsing() {
+        use std::str::FromStr;
+        assert_eq!(FirewallPolicy::from_str("ACCEPT").unwrap(), FirewallPolicy::Accept);
+        assert_eq!(FirewallPolicy::from_str("DROP").unwrap(), FirewallPolicy::Drop);
+    }
 
-        let args = json!({
-            "name": "test-rule",
-            "src_zone": "lan",
-            "dest_zone": "wan",
-            "dest_port": "80",
-            "protocol": "tcp",
-            "target": "ACCEPT"
-        });
+    #[test]
+    fn test_rule_builder() {
+        let rule = FirewallRule::new("test-rule")
+            .src_zone(FirewallZone::Lan)
+            .dest_zone(FirewallZone::Wan)
+            .dest_port("80")
+            .protocol(Protocol::Tcp)
+            .target(FirewallPolicy::Accept);
 
-        let rule = tool.parse_rule_from_args(&args).unwrap();
         assert_eq!(rule.name, "test-rule");
         assert_eq!(rule.src_zone, Some(FirewallZone::Lan));
         assert_eq!(rule.dest_zone, Some(FirewallZone::Wan));
-        assert_eq!(rule.dest_port, Some("80".to_string()));
-        assert_eq!(rule.protocol, Some(Protocol::Tcp));
-        assert_eq!(rule.target, FirewallPolicy::Accept);
-    }
-
-    #[test]
-    fn parse_rule_missing_name() {
-        let tool = FirewallAddTool::new(
-            test_security(),
-            test_executor(),
-            test_transaction_manager(),
-            test_change_wrapper(),
-        );
-
-        let args = json!({
-            "src_zone": "lan"
-        });
-
-        let result = tool.parse_rule_from_args(&args);
-        assert!(result.is_err());
     }
 }

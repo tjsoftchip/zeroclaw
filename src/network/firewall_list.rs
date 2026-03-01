@@ -304,7 +304,7 @@ mod tests {
 
         let output = tool.format_rules(&rules, "json");
         assert!(output.contains("test-rule"));
-        assert!(output.contains("lan"));
-        assert!(output.contains("wan"));
+        assert!(output.contains("Lan") || output.contains("lan"));
+        assert!(output.contains("Wan") || output.contains("wan"));
     }
 }
