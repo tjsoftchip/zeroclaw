@@ -10,6 +10,7 @@ pub mod firewall_schedule;
 pub mod firewall_content_filter;
 pub mod firewall_port_forward;
 pub mod security;
+pub mod topology;
 
 pub use interface_list::NetworkInterfaceListTool;
 pub use device_discover::NetworkDeviceDiscoverTool;
@@ -32,4 +33,9 @@ pub use firewall::{
 pub use security::{
     SecurityLevel, SecurityEvent, SecurityEventType,
     TrafficStats, BlockedIP, ThreatInfo, AlertConfig,
+};
+
+pub use topology::{
+    NetworkTopologyTool, DeviceConnectionsTool, TopologyVisualizeTool,
+    NetworkNode, NodeType, NetworkLink, LinkType, NetworkTopology,
 };
