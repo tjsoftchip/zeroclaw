@@ -1,0 +1,170 @@
+name: OpenWrt Build
+
+on:
+  push:
+    branches: [main, dev]
+    tags: ['v*']
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target architecture'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - aarch64
+          - armv7
+          - mipsel
+          - x86_64
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build-openwrt:
+    name: Build for ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-musl
+            arch: aarch64
+            sdk: aarch64
+          - target: armv7-unknown-linux-musleabihf
+            arch: armv7
+            sdk: armvirt
+          - target: mipsel-unknown-linux-musl
+            arch: mipsel
+            sdk: ramips
+          - target: x86_64-unknown-linux-musl
+            arch: x86_64
+            sdk: x86_64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.target }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Install cross-compilation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools crossbuild-essential-armhf crossbuild-essential-arm64
+          
+          case "${{ matrix.target }}" in
+            aarch64-unknown-linux-musl)
+              sudo ln -sf /usr/bin/aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-musl-gcc
+              ;;
+            armv7-unknown-linux-musleabihf)
+              sudo ln -sf /usr/bin/arm-linux-gnueabihf-gcc /usr/bin/arm-linux-musleabihf-gcc
+              ;;
+            mipsel-unknown-linux-musl)
+              sudo apt-get install -y crossbuild-essential-mipsel
+              sudo ln -sf /usr/bin/mipsel-linux-gnu-gcc /usr/bin/mipsel-linux-musl-gcc
+              ;;
+          esac
+
+      - name: Configure cargo for cross-compilation
+        run: |
+          mkdir -p ~/.cargo
+          cat >> ~/.cargo/config.toml << EOF
+          
+          [target.${{ matrix.target }}]
+          linker = "${{ matrix.target == 'aarch64-unknown-linux-musl' && 'aarch64-linux-gnu-gcc' || matrix.target == 'armv7-unknown-linux-musleabihf' && 'arm-linux-gnueabihf-gcc' || matrix.target == 'mipsel-unknown-linux-musl' && 'mipsel-linux-gnu-gcc' || 'musl-gcc' }}"
+          EOF
+
+      - name: Build binary
+        run: |
+          cargo build --release-openwrt --target ${{ matrix.target }} --no-default-features --features wasm-tools
+          
+      - name: Strip binary
+        run: |
+          cd target/${{ matrix.target }}/release-openwrt
+          strip zeroclaw || true
+          ls -lh zeroclaw
+
+      - name: Check binary size
+        id: size
+        run: |
+          BINARY_PATH="target/${{ matrix.target }}/release-openwrt/zeroclaw"
+          SIZE=$(stat -c%s "$BINARY_PATH")
+          SIZE_MB=$((SIZE / 1024 / 1024))
+          echo "size_bytes=$SIZE" >> $GITHUB_OUTPUT
+          echo "size_mb=$SIZE_MB" >> $GITHUB_OUTPUT
+          echo "Binary size: ${SIZE_MB}MB"
+          
+          if [ $SIZE_MB -gt 20 ]; then
+            echo "::warning::Binary size (${SIZE_MB}MB) exceeds 20MB target"
+          fi
+
+      - name: Create ipk package
+        run: |
+          chmod +x scripts/openwrt-package.sh
+          ./scripts/openwrt-package.sh ${{ matrix.arch }} ${{ matrix.target }}
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zeroclaw-${{ matrix.arch }}
+          path: |
+            target/${{ matrix.target }}/release-openwrt/zeroclaw
+            packages/*.ipk
+          retention-days: 30
+
+  build-summary:
+    name: Build Summary
+    needs: build-openwrt
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List build artifacts
+        run: |
+          echo "## Build Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Architecture | Binary | IPK Package |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|--------|-------------|" >> $GITHUB_STEP_SUMMARY
+          
+          for dir in artifacts/zeroclaw-*/; do
+            arch=$(basename "$dir" | sed 's/zeroclaw-//')
+            binary=$(ls "$dir"/*.ipk 2>/dev/null | head -1 || echo "N/A")
+            echo "| $arch | ✅ | $binary |" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Create release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mkdir -p release-assets
+          cp artifacts/zeroclaw-*/*.ipk release-assets/ || true
+          ls -la release-assets/
+
+      - name: Upload release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-assets/*.ipk

@@ -62,9 +62,13 @@ pub(crate) mod integrations;
 pub mod memory;
 pub(crate) mod migration;
 pub(crate) mod multimodal;
+pub mod network;
 pub mod observability;
 pub(crate) mod onboard;
+pub mod openwrt;
+pub mod parental;
 pub mod peripherals;
+pub mod rollback;
 #[allow(unused_imports)]
 pub(crate) mod plugins;
 pub mod providers;
