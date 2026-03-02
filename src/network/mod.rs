@@ -11,6 +11,7 @@ pub mod firewall_content_filter;
 pub mod firewall_port_forward;
 pub mod security;
 pub mod topology;
+pub mod proxy;
 
 pub use interface_list::NetworkInterfaceListTool;
 pub use device_discover::NetworkDeviceDiscoverTool;
@@ -38,4 +39,10 @@ pub use security::{
 pub use topology::{
     NetworkTopologyTool, DeviceConnectionsTool, TopologyVisualizeTool,
     NetworkNode, NodeType, NetworkLink, LinkType, NetworkTopology,
+};
+
+pub use proxy::{
+    ProxyConfigTool, AdBlockManageTool, DnsFilterTool, RoutingRulesTool,
+    ProxyType, ProxyServer, ProxyGroup, LoadBalanceStrategy,
+    AdBlockList, DnsFilterRule, DnsAction, RoutingRule, MatchType,
 };
