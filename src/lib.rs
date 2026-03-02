@@ -59,6 +59,7 @@ pub mod hooks;
 pub(crate) mod identity;
 // Intentionally unused re-export — public API surface for plugin authors.
 pub(crate) mod integrations;
+pub mod knowledge;
 pub mod memory;
 pub(crate) mod migration;
 pub(crate) mod multimodal;
@@ -70,6 +71,8 @@ pub mod parental;
 pub mod peripherals;
 pub mod rollback;
 pub mod smarthome;
+pub mod skills;
+
 #[allow(unused_imports)]
 pub(crate) mod plugins;
 pub mod providers;
