@@ -69,6 +69,7 @@ pub mod openwrt;
 pub mod parental;
 pub mod peripherals;
 pub mod rollback;
+pub mod smarthome;
 #[allow(unused_imports)]
 pub(crate) mod plugins;
 pub mod providers;
