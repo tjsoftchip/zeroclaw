@@ -87,6 +87,15 @@ Last refreshed: **February 28, 2026**.
 - [datasheets/arduino-uno.md](datasheets/arduino-uno.md)
 - [datasheets/esp32.md](datasheets/esp32.md)
 
+### 5A) OpenWrt Smart Gateway
+
+- [openwrt-development-summary.md](openwrt-development-summary.md)
+- [openwrt-api-reference.md](openwrt-api-reference.md)
+- [openwrt-parental-control-guide.md](openwrt-parental-control-guide.md)
+- [openwrt-network-guide.md](openwrt-network-guide.md)
+- [openwrt-smarthome-guide.md](openwrt-smarthome-guide.md)
+- [openwrt-knowledge-guide.md](openwrt-knowledge-guide.md)
+
 ### 6) Contribution & CI
 
 - [contributing/README.md](contributing/README.md)
